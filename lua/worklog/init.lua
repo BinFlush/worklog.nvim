@@ -7,6 +7,8 @@ local render = require("worklog.render")
 
 local M = {}
 
+-- Insert the current time at the cursor and enter insert mode.
+-- This is intentionally dumb and supports manual editing/refinement.
 function M.insert_now()
   local row = vim.api.nvim_win_get_cursor(0)[1]
   local time = os.date("%H:%M")
@@ -20,6 +22,8 @@ local function show_in_new_buffer(value)
   vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(vim.inspect(value), "\n"))
 end
 
+-- Read the latest worklog block from the current buffer.
+-- All transformation commands operate on this active worklog.
 local function get_active_worklog_lines()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   return blocks.get_last_worklog_lines(lines)
@@ -46,6 +50,7 @@ function M.show_summary()
   show_in_new_buffer(result)
 end
 
+-- Append a summary and totals block based on the active worklog.
 function M.append_summary()
   local lines = get_active_worklog_lines()
   local entries = parse.parse_lines(lines)
@@ -64,6 +69,8 @@ function M.show_quantized()
   show_in_new_buffer(result)
 end
 
+-- Append a new worklog block containing the quantized version
+-- of the current active worklog.
 function M.append_quantized()
   local lines = get_active_worklog_lines()
   local entries = parse.parse_lines(lines)

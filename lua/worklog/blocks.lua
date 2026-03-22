@@ -8,6 +8,8 @@ local function is_worklog_header(line)
   return line == "--- worklog ---"
 end
 
+-- Return the lines from the latest worklog block.
+-- If no explicit worklog block exists, treat the entire file as the worklog.
 function M.get_last_worklog_lines(lines)
   local last_worklog_start = nil
 
