@@ -229,6 +229,9 @@ This keeps the source log simple while making refinement and reporting cheap.
 
 ## Install
 
+Install with your plugin manager of choice, then call
+`require("worklog").setup()` to register the commands.
+
 Example with `lazy.nvim`:
 
 ```lua
@@ -238,4 +241,19 @@ Example with `lazy.nvim`:
     require("worklog").setup()
   end,
 }
+```
+
+After the plugin is loaded, the `:WorklogInsert`, `:WorklogCopy`,
+`:WorklogSummarize`, and `:WorklogQuantSum` commands are available in normal
+buffers.
+
+## Example Keymaps
+
+Example mappings:
+
+```lua
+vim.keymap.set("n", "<leader>wi", "<cmd>WorklogInsert<cr>", { desc = "Worklog insert time" })
+vim.keymap.set("n", "<leader>ww", "<cmd>WorklogCopy<cr>", { desc = "Worklog copy block" })
+vim.keymap.set("n", "<leader>ws", "<cmd>WorklogSummarize<cr>", { desc = "Worklog summarize exact" })
+vim.keymap.set("n", "<leader>wq", "<cmd>WorklogQuantSum<cr>", { desc = "Worklog summarize quantized" })
 ```
