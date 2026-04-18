@@ -45,6 +45,11 @@ function M.summarize(intervals)
   }
 end
 
+-- Quantize grouped summary rows together.
+-- The overall activity total is rounded to the nearest 15 minutes, each grouped
+-- item is rounded down, and the remaining 15-minute blocks are assigned to the
+-- largest remainders. `#ooo` items participate in the same pass, but are
+-- excluded from the final workday total.
 function M.quantized_summarize(intervals)
   local summary = M.summarize(intervals)
   local target_total = round_to_nearest_15(summary.activity_total)

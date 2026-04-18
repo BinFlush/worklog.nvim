@@ -114,13 +114,13 @@ Input worklog:
 Exact summary:
 
 ```text
---- summary ---
+--- summary exact ---
 1.00h bake strudel
 0.20h negotiate with goose
 0.32h coffee with ghost (ooo)
 0.42h polish trombone
 
---- totals ---
+--- totals exact ---
 1.93h activity
 1.62h workday
 ```
@@ -136,13 +136,13 @@ Here:
 Using the same input worklog `:WorklogQuantSum` appends:
 
 ```text
---- summary ---
+--- summary quantized ---
 1.00h bake strudel
 0.25h negotiate with goose
 0.25h coffee with ghost (ooo)
 0.50h polish trombone
 
---- totals ---
+--- totals quantized ---
 2.00h activity
 1.75h workday
 ```
@@ -195,11 +195,11 @@ Input buffer:
 08:45 mail wizard council
 09:00 done
 
---- summary ---
+--- summary quantized ---
 0.50h bake strudel
 0.25h mail wizard council
 
---- totals ---
+--- totals quantized ---
 0.75h activity
 0.75h workday
 ```
@@ -239,4 +239,3 @@ Example with `lazy.nvim`:
   end,
 }
 ```
-

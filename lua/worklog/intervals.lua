@@ -3,6 +3,7 @@ local M = {}
 -- Build intervals from parsed entries.
 -- Each entry starts an activity that continues until the next entry.
 -- The final "done" line is assumed to exist and closes the last real interval.
+-- Entries are assumed to already be in chronological order.
 function M.build(entries)
   local intervals = {}
 

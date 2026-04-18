@@ -23,6 +23,16 @@ local function get_active_worklog_lines()
   return blocks.get_last_worklog_lines(lines)
 end
 
+local function get_active_entries()
+  local lines = get_active_worklog_lines()
+  return parse.parse_lines(lines)
+end
+
+local function get_active_intervals()
+  local entries = get_active_entries()
+  return intervals.build(entries)
+end
+
 local function append_lines(lines)
   local last = vim.api.nvim_buf_line_count(0)
   vim.api.nvim_buf_set_lines(0, last, last, false, lines)
@@ -30,33 +40,24 @@ end
 
 -- Append a summary and totals block based on the active worklog.
 function M.append_summary()
-  local lines = get_active_worklog_lines()
-  local entries = parse.parse_lines(lines)
-  local ivs = intervals.build(entries)
+  local ivs = get_active_intervals()
   local result = summary.summarize(ivs)
-  local rendered = render.summary_lines(result)
+  local rendered = render.summary_lines(result, "exact")
 
   append_lines(rendered)
 end
 
 function M.append_quantized_summary()
-  local lines = get_active_worklog_lines()
-  local entries = parse.parse_lines(lines)
-  local ivs = intervals.build(entries)
+  local ivs = get_active_intervals()
   local result = summary.quantized_summarize(ivs)
-  local rendered = render.summary_lines(result)
+  local rendered = render.summary_lines(result, "quantized")
 
   append_lines(rendered)
 end
 
 function M.append_copy()
   local lines = get_active_worklog_lines()
-  local rendered = {
-    "",
-    "--- worklog ---",
-  }
-
-  vim.list_extend(rendered, lines)
+  local rendered = render.worklog_lines(lines)
   append_lines(rendered)
 end
 
