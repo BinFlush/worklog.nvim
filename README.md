@@ -7,7 +7,7 @@ append derived blocks from the latest worklog.
 
 ## Input Format
 
-A worklog line starts with `HH:MM` followed by free text.
+A worklog line starts with a valid `HH:MM` time and may be followed by text.
 
 ```text
 08:04 bake strudel
@@ -21,6 +21,7 @@ A worklog line starts with `HH:MM` followed by free text.
 
 - each entry lasts until the next timestamped entry
 - non-timestamped lines (such as this one) are ignored
+- a line with only a valid time is allowed and is useful as a closing timestamp
 - `#ooo` marks an entry as out of office
 - out-of-office entries are included in `activity`, but excluded from `workday`
 - identical items are grouped by text and `#ooo` state during summary

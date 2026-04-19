@@ -1,10 +1,5 @@
 local M = {}
 
--- A semantic worklog line starts with HH:MM.
-function M.is_time_line(line)
-  return line:match("^%d%d:%d%d") ~= nil
-end
-
 -- Clean and normalize the text part of a worklog entry.
 -- - removes semantic tags like #ooo
 -- - collapses whitespace
@@ -21,12 +16,24 @@ end
 -- `#ooo` can appear anywhere in the text and marks the interval as excluded
 -- from workday totals. The tag is removed from the stored text.
 function M.parse_time_line(line)
-  local hh, mm, rest = line:match("^(%d%d):(%d%d)%s+(.+)$")
+  local hh, mm, rest = line:match("^(%d%d):(%d%d)(.*)$")
   if not hh then
     return nil
   end
 
-  local minutes = tonumber(hh) * 60 + tonumber(mm)
+  if rest ~= "" and not rest:match("^%s") then
+    return nil
+  end
+
+  hh = tonumber(hh)
+  mm = tonumber(mm)
+
+  if hh > 23 or mm > 59 then
+    return nil
+  end
+
+  local minutes = hh * 60 + mm
+  rest = rest:gsub("^%s+", "")
   local excluded = rest:match("#ooo") ~= nil
 
   rest = normalize_text(rest)
@@ -48,11 +55,9 @@ function M.parse_lines(lines)
   local entries = {}
 
   for _, line in ipairs(lines) do
-    if M.is_time_line(line) then
-      local entry = M.parse_time_line(line)
-      if entry then
-        table.insert(entries, entry)
-      end
+    local entry = M.parse_time_line(line)
+    if entry then
+      table.insert(entries, entry)
     end
   end
 
