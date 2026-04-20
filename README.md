@@ -30,7 +30,7 @@ A worklog line starts with a valid `HH:MM` time and may be followed by text.
 
 ## Active Worklog
 
-The plugin always operates on the active worklog.
+Most commands operate on the active worklog.
 
 - if the buffer contains one or more `--- worklog ---` headers, the latest one
   is the active worklog
@@ -41,6 +41,9 @@ The plugin always operates on the active worklog.
 This makes it easy to keep raw notes at the top of the file and append derived
 blocks below.
 
+`WorklogCopy`, `WorklogSummarize`, and `WorklogQuantSum` use the active
+worklog. `WorklogRepeat` instead uses the worklog body containing the cursor.
+
 ## Commands
 
 ### `:WorklogInsert`
@@ -48,6 +51,14 @@ blocks below.
 Insert the current time at the cursor and enter insert mode.
 
 Use this while logging live in a buffer.
+
+### `:WorklogRepeat`
+
+Repeat the activity under the cursor at the current time.
+
+- the cursor line must be a valid worklog line
+- the new entry is inserted at the end of the worklog body containing the cursor
+- any following summary or totals blocks are left in place
 
 ### `:WorklogCopy`
 
@@ -181,7 +192,8 @@ After `:WorklogCopy`:
 ```
 
 The copied block becomes the latest `--- worklog ---` block, so later commands
-operate on that block rather than on the whole buffer.
+that use the active worklog operate on that block rather than on the whole
+buffer.
 
 ### Example: active worklog selection
 
@@ -245,8 +257,8 @@ Example with `lazy.nvim`:
 ```
 
 After the plugin is loaded, the `:WorklogInsert`, `:WorklogCopy`,
-`:WorklogSummarize`, and `:WorklogQuantSum` commands are available in normal
-buffers.
+`:WorklogRepeat`, `:WorklogSummarize`, and `:WorklogQuantSum` commands are
+available in normal buffers.
 
 ## Example Keymaps
 
@@ -254,6 +266,7 @@ Example mappings:
 
 ```lua
 vim.keymap.set("n", "<leader>wi", "<cmd>WorklogInsert<cr>", { desc = "Worklog insert time" })
+vim.keymap.set("n", "<leader>wr", "<cmd>WorklogRepeat<cr>", { desc = "Worklog repeat activity" })
 vim.keymap.set("n", "<leader>ww", "<cmd>WorklogCopy<cr>", { desc = "Worklog copy block" })
 vim.keymap.set("n", "<leader>ws", "<cmd>WorklogSummarize<cr>", { desc = "Worklog summarize exact" })
 vim.keymap.set("n", "<leader>wq", "<cmd>WorklogQuantSum<cr>", { desc = "Worklog summarize quantized" })

@@ -23,6 +23,12 @@ local function get_active_worklog_lines()
   return blocks.get_last_worklog_lines(lines)
 end
 
+local function get_worklog_insert_index_at_cursor()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local row = vim.api.nvim_win_get_cursor(0)[1]
+  return blocks.get_worklog_insert_index_at(lines, row)
+end
+
 local function get_active_entries()
   local lines = get_active_worklog_lines()
   return parse.parse_lines(lines)
@@ -36,6 +42,20 @@ end
 local function append_lines(lines)
   local last = vim.api.nvim_buf_line_count(0)
   vim.api.nvim_buf_set_lines(0, last, last, false, lines)
+end
+
+local function format_entry_line(entry, time)
+  local parts = { time }
+
+  if entry.text ~= "" then
+    table.insert(parts, entry.text)
+  end
+
+  if entry.excluded then
+    table.insert(parts, "#ooo")
+  end
+
+  return table.concat(parts, " ")
 end
 
 -- Append a summary and totals block based on the active worklog.
@@ -61,9 +81,25 @@ function M.append_copy()
   append_lines(rendered)
 end
 
+function M.repeat_current()
+  local entry = parse.parse_time_line(vim.api.nvim_get_current_line())
+  if not entry then
+    vim.notify("worklog: current line is not a valid worklog entry", vim.log.levels.WARN)
+    return
+  end
+
+  local line = format_entry_line(entry, os.date("%H:%M"))
+  local insert_at = get_worklog_insert_index_at_cursor()
+  vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { line })
+end
+
 function M.setup()
   vim.api.nvim_create_user_command("WorklogInsert", function()
     M.insert_now()
+  end, {})
+
+  vim.api.nvim_create_user_command("WorklogRepeat", function()
+    M.repeat_current()
   end, {})
 
   vim.api.nvim_create_user_command("WorklogCopy", function()
