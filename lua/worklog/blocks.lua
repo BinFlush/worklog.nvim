@@ -1,80 +1,118 @@
 local M = {}
 
+local WORKLOG_HEADER = "--- worklog ---"
+
 local function is_header(line)
   return line:match("^%-%-%- .+ %-%-%-$") ~= nil
 end
 
-local function is_worklog_header(line)
-  return line == "--- worklog ---"
+local function is_worklog(block)
+  return block.header == nil or block.header == WORKLOG_HEADER
 end
 
-local function get_last_worklog_range(lines)
-  local start_index = 1
+function M.is_worklog(block)
+  return is_worklog(block)
+end
+
+function M.parse(lines)
+  local headers = {}
 
   for i, line in ipairs(lines) do
-    if is_worklog_header(line) then
-      start_index = i + 1
+    if is_header(line) then
+      table.insert(headers, {
+        header = line,
+        start_row = i,
+        body_start_row = i + 1,
+      })
     end
   end
 
-  local stop_index = #lines + 1
+  local blocks = {}
 
-  for i = start_index, #lines do
-    if is_header(lines[i]) then
-      stop_index = i
-      break
-    end
+  if #headers == 0 then
+    table.insert(blocks, {
+      header = nil,
+      start_row = 1,
+      body_start_row = 1,
+      end_row = #lines + 1,
+    })
+    return blocks
   end
 
-  return start_index, stop_index
+  if headers[1].start_row > 1 then
+    table.insert(blocks, {
+      header = nil,
+      start_row = 1,
+      body_start_row = 1,
+      end_row = headers[1].start_row,
+    })
+  end
+
+  for i, block in ipairs(headers) do
+    local next_block = headers[i + 1]
+
+    block.end_row = next_block and next_block.start_row or (#lines + 1)
+    table.insert(blocks, block)
+  end
+
+  return blocks
 end
 
-local function get_worklog_range_at(lines, row)
-  local start_index = 1
+function M.get_active_worklog(blocks)
+  local active = nil
 
-  for i = 1, math.min(row - 1, #lines) do
-    if is_worklog_header(lines[i]) then
-      start_index = i + 1
+  for _, block in ipairs(blocks) do
+    if is_worklog(block) then
+      active = block
     end
   end
 
-  local stop_index = #lines + 1
-
-  for i = start_index, #lines do
-    if is_header(lines[i]) then
-      stop_index = i
-      break
-    end
-  end
-
-  return start_index, stop_index
+  return active
 end
 
--- Return the lines from the latest worklog block.
--- If no explicit worklog block exists, treat the entire file as the worklog.
-function M.get_last_worklog_lines(lines)
-  local start_index, stop_index = get_last_worklog_range(lines)
+function M.get_worklog_at_row(blocks, row)
+  for _, block in ipairs(blocks) do
+    if is_worklog(block) and row >= block.body_start_row and row < block.end_row then
+      return block
+    end
+  end
 
+  return nil
+end
+
+function M.get_body_lines(lines, block)
   local result = {}
 
-  for i = start_index, stop_index - 1 do
-    local line = lines[i]
-    table.insert(result, line)
+  for i = block.body_start_row, block.end_row - 1 do
+    table.insert(result, lines[i])
   end
 
   return result
 end
 
--- Return the 0-indexed insertion point at the end of the active worklog body.
-function M.get_last_worklog_insert_index(lines)
-  local _, stop_index = get_last_worklog_range(lines)
-  return stop_index - 1
+function M.trim_empty_lines(lines)
+  local start_index = 1
+  local end_index = #lines
+
+  while start_index <= #lines and lines[start_index] == "" do
+    start_index = start_index + 1
+  end
+
+  while end_index >= start_index and lines[end_index] == "" do
+    end_index = end_index - 1
+  end
+
+  local result = {}
+
+  for i = start_index, end_index do
+    table.insert(result, lines[i])
+  end
+
+  return result
 end
 
--- Return the 0-indexed insertion point at the end of the worklog body around `row`.
-function M.get_worklog_insert_index_at(lines, row)
-  local _, stop_index = get_worklog_range_at(lines, row)
-  return stop_index - 1
+function M.get_insert_index(block)
+  return block.end_row - 1
 end
 
 return M

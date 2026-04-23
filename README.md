@@ -44,6 +44,9 @@ blocks below.
 `WorklogCopy`, `WorklogSummarize`, and `WorklogQuantSum` use the active
 worklog. `WorklogRepeat` instead uses the worklog body containing the cursor.
 
+All commands except `WorklogOrder` stop if any worklog block in the buffer has
+decreasing timestamps.
+
 ## Commands
 
 ### `:WorklogInsert`
@@ -64,8 +67,17 @@ Repeat the activity under the cursor at the current time.
 
 Append a new `--- worklog ---` block containing the active worklog unchanged.
 
-Use this when you want to iteratively refine timestamps or descriptions by hand while keeping
-the previous version above as a reference.
+Use this when you want to iteratively refine timestamps or descriptions by hand
+while keeping the previous version above as a reference.
+
+### `:WorklogOrder`
+
+Reorder every worklog block in the buffer by timestamp.
+
+- timestamped lines are sorted in ascending time order
+- equal timestamps are allowed and keep their original relative order
+- non-timestamped lines after a timestamped line move with that line
+- non-timestamped lines before the first timestamped line in a block stay at the top
 
 ### `:WorklogSummarize`
 
@@ -104,6 +116,15 @@ One important consequence:
 
 - non-`#ooo` grouped rows will always sum exactly to `workday`
 - all grouped rows, including `#ooo`, participate in the same quantization pass
+
+## Ordering Rules
+
+- timestamps within a worklog must not decrease
+- equal timestamps are allowed
+- if a command finds decreasing timestamps anywhere in the buffer, it stops and
+  warns with the absolute line numbers of the first offending pair
+- the warning suggests either fixing the lines manually or running
+  `:WorklogOrder`
 
 ## Examples
 
@@ -257,8 +278,8 @@ Example with `lazy.nvim`:
 ```
 
 After the plugin is loaded, the `:WorklogInsert`, `:WorklogCopy`,
-`:WorklogRepeat`, `:WorklogSummarize`, and `:WorklogQuantSum` commands are
-available in normal buffers.
+`:WorklogRepeat`, `:WorklogOrder`, `:WorklogSummarize`, and `:WorklogQuantSum`
+commands are available in normal buffers.
 
 ## Example Keymaps
 
@@ -268,6 +289,7 @@ Example mappings:
 vim.keymap.set("n", "<leader>wi", "<cmd>WorklogInsert<cr>", { desc = "Worklog insert time" })
 vim.keymap.set("n", "<leader>wr", "<cmd>WorklogRepeat<cr>", { desc = "Worklog repeat activity" })
 vim.keymap.set("n", "<leader>ww", "<cmd>WorklogCopy<cr>", { desc = "Worklog copy block" })
+vim.keymap.set("n", "<leader>wo", "<cmd>WorklogOrder<cr>", { desc = "Worklog order blocks" })
 vim.keymap.set("n", "<leader>ws", "<cmd>WorklogSummarize<cr>", { desc = "Worklog summarize exact" })
 vim.keymap.set("n", "<leader>wq", "<cmd>WorklogQuantSum<cr>", { desc = "Worklog summarize quantized" })
 ```
