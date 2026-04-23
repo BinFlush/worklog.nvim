@@ -293,3 +293,21 @@ vim.keymap.set("n", "<leader>wo", "<cmd>WorklogOrder<cr>", { desc = "Worklog ord
 vim.keymap.set("n", "<leader>ws", "<cmd>WorklogSummarize<cr>", { desc = "Worklog summarize exact" })
 vim.keymap.set("n", "<leader>wq", "<cmd>WorklogQuantSum<cr>", { desc = "Worklog summarize quantized" })
 ```
+
+## Development
+
+Run the checked-in headless test suite with:
+
+```sh
+nvim --headless -i NONE -u NONE \
+  "+set rtp+=." \
+  "+lua dofile('tests/run.lua')" \
+  +qa!
+```
+
+There is also a simple tracked pre-commit hook script at
+`.githooks/pre-commit`. To use it locally:
+
+```sh
+ln -sf ../../.githooks/pre-commit .git/hooks/pre-commit
+```
