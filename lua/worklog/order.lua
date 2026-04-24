@@ -1,5 +1,9 @@
 local M = {}
 
+-- Worklog ordering operates on normalized timestamped items rather than raw
+-- lines. A timestamped line owns all following non-timestamped lines until the
+-- next timestamped line, while preamble lines before the first timestamp stay
+-- outside of any item.
 local function trim_trailing_empty_lines(lines)
   local end_index = #lines
 
@@ -76,6 +80,8 @@ function M.find_unordered_rows(items)
 end
 
 function M.get_insert_row(items, minutes, default_row)
+  -- Equal timestamps are allowed, so new entries are placed after any existing
+  -- item with the same time and before the first later item.
   for _, item in ipairs(items) do
     if item.minutes > minutes then
       return item.row - 1
@@ -108,6 +114,7 @@ end
 function M.sorted_lines(parsed)
   local items = vim.deepcopy(parsed.items)
 
+  -- Preserve original order for equal timestamps so WorklogOrder stays stable.
   table.sort(items, function(a, b)
     if a.minutes == b.minutes then
       return a.index < b.index

@@ -8,8 +8,9 @@ local render = require("worklog.render")
 
 local M = {}
 
--- Read the latest worklog block from the current buffer.
--- All transformation commands operate on this active worklog.
+-- Commands either operate on the active worklog (copy/summarize) or on the
+-- worklog containing the cursor (insert/repeat). Keep those lookups here so
+-- the command bodies read as straightforward orchestration.
 local function get_active_worklog_lines()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local ctx = context.get_active_worklog_context(lines)
@@ -83,6 +84,9 @@ local function warn_if_unordered_worklogs()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local parsed = blocks.parse(lines)
 
+  -- Interval building assumes non-decreasing timestamps in every worklog. Stop
+  -- early with a concrete line-number warning before any command mutates or
+  -- summarizes the buffer.
   for _, block in ipairs(parsed) do
     if blocks.is_worklog(block) then
       local body_lines = blocks.get_body_lines(lines, block)

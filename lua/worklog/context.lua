@@ -2,6 +2,9 @@ local blocks = require("worklog.blocks")
 
 local M = {}
 
+-- Context selection answers "which worklog block should this command use?"
+-- The returned table keeps the original buffer lines, the selected block, and
+-- the block body together so command code can stay focused on behavior.
 local function build_context(lines, block)
   if not block then
     return nil
