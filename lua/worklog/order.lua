@@ -75,6 +75,16 @@ function M.find_unordered_rows(items)
   return nil
 end
 
+function M.get_insert_row(items, minutes, default_row)
+  for _, item in ipairs(items) do
+    if item.minutes > minutes then
+      return item.row - 1
+    end
+  end
+
+  return default_row
+end
+
 local function rebuild_lines(preamble_lines, items)
   local lines = {}
 

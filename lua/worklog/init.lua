@@ -21,7 +21,7 @@ local function get_active_worklog_lines()
   return blocks.get_body_lines(lines, block)
 end
 
-local function get_worklog_insert_index_at_cursor()
+local function get_worklog_context_at_cursor()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local parsed = blocks.parse(lines)
   local row = vim.api.nvim_win_get_cursor(0)[1]
@@ -31,7 +31,33 @@ local function get_worklog_insert_index_at_cursor()
     return nil
   end
 
-  return blocks.get_insert_index(block)
+  return {
+    lines = lines,
+    block = block,
+  }
+end
+
+local function get_ordered_insert_index(context, minutes)
+  local lines = context.lines
+  local block = context.block
+
+  local body_lines = blocks.get_body_lines(lines, block)
+  local parsed_body = order.parse_items(body_lines, block.body_start_row, parse.parse_time_line)
+  return order.get_insert_row(parsed_body.items, minutes, blocks.get_insert_index(block))
+end
+
+local function insert_into_current_worklog(line, minutes)
+  local context = get_worklog_context_at_cursor()
+
+  if not context then
+    vim.notify("worklog: current line is not inside a worklog block", vim.log.levels.WARN)
+    return nil
+  end
+
+  local insert_at = get_ordered_insert_index(context, minutes)
+  vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { line })
+
+  return insert_at
 end
 
 local function get_active_entries()
@@ -97,9 +123,14 @@ function M.insert_now()
     return
   end
 
-  local row = vim.api.nvim_win_get_cursor(0)[1]
   local time = os.date("%H:%M")
-  vim.api.nvim_buf_set_lines(0, row, row, false, { time .. " " })
+  local entry = parse.parse_time_line(time)
+  local row = insert_into_current_worklog(time .. " ", entry.minutes)
+
+  if not row then
+    return
+  end
+
   vim.api.nvim_win_set_cursor(0, { row + 1, #time + 1 })
   vim.cmd("startinsert!")
 end
@@ -152,13 +183,10 @@ function M.repeat_current()
   end
 
   local line = format_entry_line(entry, os.date("%H:%M"))
-  local insert_at = get_worklog_insert_index_at_cursor()
+  local insert_at = insert_into_current_worklog(line, parse.parse_time_line(line).minutes)
   if not insert_at then
-    vim.notify("worklog: current line is not inside a worklog block", vim.log.levels.WARN)
     return
   end
-
-  vim.api.nvim_buf_set_lines(0, insert_at, insert_at, false, { line })
 end
 
 function M.order_worklogs()

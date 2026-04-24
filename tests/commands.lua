@@ -119,6 +119,136 @@ return function(t)
     t.eq(t.get_lines()[11], "14:37 tea")
   end)
 
+  t.test("insert orders into implicit worklog block", function()
+    t.reset({
+      "08:00 first",
+      "09:00 done",
+    })
+    t.set_cursor(1, 0)
+
+    local old_date = os.date
+    os.date = function()
+      return "08:30"
+    end
+
+    vim.cmd("WorklogInsert")
+    os.date = old_date
+
+    t.eq(t.get_lines(), {
+      "08:00 first",
+      "08:30 ",
+      "09:00 done",
+    })
+  end)
+
+  t.test("insert orders into explicit worklog block after equal timestamps", function()
+    t.reset({
+      "08:00 raw",
+      "09:00",
+      "",
+      "--- worklog ---",
+      "08:00 first",
+      "08:00 second",
+      "09:00 done",
+    })
+    t.set_cursor(5, 0)
+
+    local old_date = os.date
+    os.date = function()
+      return "08:00"
+    end
+
+    vim.cmd("WorklogInsert")
+    os.date = old_date
+
+    t.eq(t.get_lines(), {
+      "08:00 raw",
+      "09:00",
+      "",
+      "--- worklog ---",
+      "08:00 first",
+      "08:00 second",
+      "08:00 ",
+      "09:00 done",
+    })
+  end)
+
+  t.test("insert warns outside worklog block", function()
+    t.reset({
+      "08:00 raw",
+      "09:00",
+      "",
+      "--- summary exact ---",
+      "0.00h raw",
+    })
+    t.set_cursor(4, 0)
+
+    vim.cmd("WorklogInsert")
+    t.eq(t.get_lines(), {
+      "08:00 raw",
+      "09:00",
+      "",
+      "--- summary exact ---",
+      "0.00h raw",
+    })
+  end)
+
+  t.test("repeat orders into implicit worklog block", function()
+    t.reset({
+      "08:00 first",
+      "09:00 second",
+      "10:00 done",
+    })
+    t.set_cursor(1, 0)
+
+    local old_date = os.date
+    os.date = function()
+      return "08:30"
+    end
+
+    vim.cmd("WorklogRepeat")
+    os.date = old_date
+
+    t.eq(t.get_lines(), {
+      "08:00 first",
+      "08:30 first",
+      "09:00 second",
+      "10:00 done",
+    })
+  end)
+
+  t.test("repeat orders into explicit block after equal timestamps", function()
+    t.reset({
+      "08:00 raw",
+      "09:00",
+      "",
+      "--- worklog ---",
+      "08:00 tea",
+      "08:00 coffee",
+      "09:00 done",
+    })
+    t.set_cursor(5, 0)
+
+    local old_date = os.date
+    os.date = function()
+      return "08:00"
+    end
+
+    vim.cmd("WorklogRepeat")
+    os.date = old_date
+
+    t.eq(t.get_lines(), {
+      "08:00 raw",
+      "09:00",
+      "",
+      "--- worklog ---",
+      "08:00 tea",
+      "08:00 coffee",
+      "08:00 tea",
+      "09:00 done",
+    })
+  end)
+
   t.test("repeat ignores non-worklog lines", function()
     t.reset({
       "08:00 task",
