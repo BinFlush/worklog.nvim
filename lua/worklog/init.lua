@@ -1,4 +1,5 @@
 local blocks = require("worklog.blocks")
+local context = require("worklog.context")
 local order = require("worklog.order")
 local parse = require("worklog.parse")
 local intervals = require("worklog.intervals")
@@ -11,30 +12,19 @@ local M = {}
 -- All transformation commands operate on this active worklog.
 local function get_active_worklog_lines()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local parsed = blocks.parse(lines)
-  local block = blocks.get_active_worklog(parsed)
+  local ctx = context.get_active_worklog_context(lines)
 
-  if not block then
+  if not ctx then
     return {}
   end
 
-  return blocks.get_body_lines(lines, block)
+  return ctx.body_lines
 end
 
 local function get_worklog_context_at_cursor()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local parsed = blocks.parse(lines)
   local row = vim.api.nvim_win_get_cursor(0)[1]
-  local block = blocks.get_worklog_at_row(parsed, row)
-
-  if not block then
-    return nil
-  end
-
-  return {
-    lines = lines,
-    block = block,
-  }
+  return context.get_worklog_context_at_row(lines, row)
 end
 
 local function get_ordered_insert_index(context, minutes)
