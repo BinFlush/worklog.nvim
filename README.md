@@ -51,16 +51,23 @@ decreasing timestamps.
 
 ### `:WorklogInsert`
 
-Insert the current time at the cursor and enter insert mode.
+Insert the current time into the worklog block containing the cursor.
 
-Use this while logging live in a buffer.
+Use this while logging live in a worklog.
+
+- the cursor must be inside a worklog block
+- the new entry is inserted in time order
+- equal timestamps stay grouped together
+- insert mode starts on the new line
 
 ### `:WorklogRepeat`
 
 Repeat the activity under the cursor at the current time.
 
 - the cursor line must be a valid worklog line
-- the new entry is inserted at the end of the worklog body containing the cursor
+- the cursor must be inside a worklog block
+- the new entry is inserted in time order
+- equal timestamps stay grouped together
 - any following summary or totals blocks are left in place
 
 ### `:WorklogCopy`
@@ -70,6 +77,9 @@ Append a new `--- worklog ---` block containing the active worklog unchanged.
 Use this when you want to iteratively refine timestamps or descriptions by hand
 while keeping the previous version above as a reference.
 
+- copied items are normalized the same way as `:WorklogOrder`
+- trailing empty lines attached to an item are removed in the copied block
+
 ### `:WorklogOrder`
 
 Reorder every worklog block in the buffer by timestamp.
@@ -78,6 +88,7 @@ Reorder every worklog block in the buffer by timestamp.
 - equal timestamps are allowed and keep their original relative order
 - non-timestamped lines after a timestamped line move with that line
 - non-timestamped lines before the first timestamped line in a block stay at the top
+- trailing empty lines attached to an item are removed
 
 ### `:WorklogSummarize`
 
@@ -215,6 +226,29 @@ After `:WorklogCopy`:
 The copied block becomes the latest `--- worklog ---` block, so later commands
 that use the active worklog operate on that block rather than on the whole
 buffer.
+
+### Example: ordering a worklog block
+
+Input buffer:
+
+```text
+08:30 bake strudel
+note about apples
+08:00 negotiate with goose
+09:00 done
+```
+
+After `:WorklogOrder`:
+
+```text
+08:00 negotiate with goose
+08:30 bake strudel
+note about apples
+09:00 done
+```
+
+The note moves with `08:30 bake strudel`, and trailing empty lines attached to
+an item are removed.
 
 ### Example: active worklog selection
 
